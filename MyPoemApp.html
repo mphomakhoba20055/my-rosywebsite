@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ My Poetry Garden ✨</title>
+  <style>
+    body {
+      font-family: 'Palatino Linotype', 'Georgia', serif;
+      background: linear-gradient(to bottom right, #fff0f5, #ffe4e1);
+      color: #4b2e39;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      text-align: center;
+      padding: 2rem;
+      background: linear-gradient(90deg, #ffb6c1, #ffc0cb);
+      color: #fff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    header h1 { font-size: 3rem; margin: 0; }
+    header p { font-style: italic; font-size: 1.2rem; }
+
+    main { max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+
+    .poem-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem; }
+    .poem {
+      background: linear-gradient(145deg, #ffe4e1, #fff0f5);
+      padding: 1rem; border-radius: 15px;
+      box-shadow: 2px 2px 10px rgba(203, 105, 147, 0.3);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .poem:hover { transform: translateY(-5px); box-shadow: 4px 6px 15px rgba(203, 105, 147, 0.5); }
+    .poem h2 { margin-top: 0; color: #c71585; font-family: 'Brush Script MT', cursive; }
+    .poem h4 { margin: 0 0 0.5rem 0; color: #8b008b; font-style: italic; }
+    .poem p { line-height: 1.5; white-space: pre-line; }
+
+    #add-poem {
+      margin-top: 3rem;
+      background: #fff0f5;
+      padding: 1.5rem;
+      border-radius: 15px;
+      box-shadow: 2px 2px 10px rgba(203, 105, 147, 0.2);
+    }
+    #add-poem h2 { color: #c71585; }
+    #add-poem form { display: flex; flex-direction: column; gap: 0.8rem; }
+    #add-poem input, #add-poem textarea {
+      padding: 0.7rem; border-radius: 10px; border: 1px solid #c71585; font-size: 1rem; width: 100%;
+    }
+    #add-poem button {
+      padding: 0.8rem; border: none; background: #c71585;
+      color: white; font-size: 1rem; border-radius: 10px; cursor: pointer; transition: background 0.3s;
+    }
+    #add-poem button:hover { background: #ff69b4; }
+
+    #save-load { margin-top: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; }
+    #save-load button { flex: 1; padding: 0.8rem; background: #c71585; color: white; border: none; border-radius: 10px; cursor: pointer; transition: background 0.3s; }
+    #save-load button:hover { background: #ff69b4; }
+
+    footer { text-align: center; padding: 1rem; background: linear-gradient(90deg, #ffb6c1, #ffc0cb); color: #fff; margin-top: 3rem; }
+  </style>
+</head>
+<body>
+<header>
+  <h1>🌸 Rosy's Poetry Garden 🌸</h1>
+  <p>From Ashes To Grace</p>
+</header>
+
+<main>
+  <section id="poems" class="poem-gallery"></section>
+
+  <section id="add-poem">
+    <h2>Add Your Poem</h2>
+    <form id="poemForm">
+      <input type="text" id="title" placeholder="Poem Title" required>
+      <input type="text" id="poet" placeholder="Your Name" required>
+      <textarea id="content" placeholder="Write your poem here..." required></textarea>
+      <button type="submit">🌷 Add Poem</button>
+    </form>
+    <div id="save-load">
+      <button id="saveBtn">💾 Save Poems to File</button>
+      <input type="file" id="loadFile" style="display:none;" />
+      <button id="loadBtn">📂 Load Poems from File</button>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>© 2026 My Poetry Garden 💖</p>
+</footer>
+
+<script>
+let poems = [];
+
+// Load initial poems from localStorage if available
+if(localStorage.getItem('poemsFile')) {
+  poems = JSON.parse(localStorage.getItem('poemsFile'));
+  poems.forEach(p => addPoemToPage(p.title, p.poet, p.content));
+}
+
+const poemForm = document.getElementById('poemForm');
+const poemsSection = document.getElementById('poems');
+const saveBtn = document.getElementById('saveBtn');
+const loadBtn = document.getElementById('loadBtn');
+const loadFile = document.getElementById('loadFile');
+
+poemForm.addEventListener('submit', function(e){
+  e.preventDefault();
+  const title = document.getElementById('title').value;
+  const poet = document.getElementById('poet').value;
+  const content = document.getElementById('content').value;
+  const newPoem = {title, poet, content};
+  poems.push(newPoem);
+  addPoemToPage(title, poet, content);
+  poemForm.reset();
+});
+
+// Add poem to page
+function addPoemToPage(title, poet, content){
+  const poemArticle = document.createElement('article');
+  poemArticle.classList.add('poem');
+  poemArticle.innerHTML = `<h2>${title}</h2><h4>by ${poet}</h4><p>${content.replace(/\n/g,'<br>')}</p>`;
+  poemsSection.appendChild(poemArticle);
+}
+
+// Save poems to file
+saveBtn.addEventListener('click', function(){
+  const blob = new Blob([JSON.stringify(poems, null, 2)], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'my_poems.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// Load poems from file
+loadBtn.addEventListener('click', () => loadFile.click());
+
+loadFile.addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(event){
+    poems = JSON.parse(event.target.result);
+    poemsSection.innerHTML = '';
+    poems.forEach(p => addPoemToPage(p.title, p.poet, p.content));
+    localStorage.setItem('poemsFile', JSON.stringify(poems)); // optional backup
+  };
+  reader.readAsText(file);
+});
+</script>
+</body>
+</html>
